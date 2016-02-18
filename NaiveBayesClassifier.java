@@ -10,7 +10,7 @@ public class NaiveBayesClassifier {
         String trainingfilename = args[1];
         NaiveBayesTrainer trainer = new NaiveBayesTrainer();
         trainer.train(trainingfilename);
-        
+        trainer.classifyTesting(testingfilename);
         //System.out.println(filename);
     }
 }

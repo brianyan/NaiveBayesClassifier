@@ -90,12 +90,12 @@ public class NaiveBayesTrainer{
         }
 
 
-        for(String s: map.keySet()){
-        		System.out.print(s + " count: ") ;
-        		for(Double d: map.get(s))
-        			System.out.print(d + " ");
-        		System.out.println();
-	}
+ //        for(String s: map.keySet()){
+ //        		System.out.print(s + " count: ") ;
+ //        		for(Double d: map.get(s))
+ //        			System.out.print(d + " ");
+ //        		System.out.println();
+	// }
 	System.out.println(getposR());
 	System.out.println(getnegR());
 	System.out.println(this.probability_CategoryPos());
@@ -104,16 +104,45 @@ public class NaiveBayesTrainer{
 	System.out.println(getVocabulary());
 
 	}
-	public void classify(String filename) throws Exception{
+	public void classifyTesting(String filename) throws Exception{
+		// This should display the testing results in a nice format
 		String line = null;
 		BufferedReader br = new BufferedReader(new FileReader(filename));
         while((line = br.readLine()) != null){
-
-
-
+        	Review review = new Review(line.split("\\s"));
+        	Category outcome = this.classifyReview(review);
+        	if(outcome == review.cat){
+        		System.out.println("Match");
+        	}
+        	else 
+        		System.out.println("No Match");
 
         }
 	}
+	/* method to clasify one review as POS or NEG */
+	public Category classifyReview(Review r) {
+		// review should be a String [] with 0 index being its actualy review outcome
+		// should compute probabilities and output 1 if review is POS 
+		// output 0 if review is NEG
+		double CatPos = Math.log(probability_CategoryPos());
+		double CatNeg = Math.log(probability_CategoryNeg());
+		double ProbWords_in_Neg = 0.0;
+		double ProbWords_in_Pos = 0.0;
+		for(int i=1; i< r.words.length; i++){
+			ProbWords_in_Pos += Math.log(this.WordGivenCategory(r.words[i], Category.POS));
+			ProbWords_in_Neg += Math.log(this.WordGivenCategory(r.words[i], Category.NEG));
+		}
+		double finalCatPosSum = CatPos + ProbWords_in_Pos;
+		double finalCatNegSum = CatNeg + ProbWords_in_Neg;
+		System.out.println("This is Pos :" + finalCatPosSum);
+		System.out.println("This is Neg:" + finalCatNegSum);
+		if(finalCatPosSum>finalCatNegSum)
+			return Category.POS;
+		return Category.NEG;
+
+	}
+
+
 	public String normalize(String s) {
 		String [] Stopwords = {"?", "." , ",", "/", "!" , "("  ,")"
 		, "'", "-", "\"", ">", "<"};
@@ -149,6 +178,8 @@ public class NaiveBayesTrainer{
 	public int getVocabulary(){
 		return this.map.size();
 	}
+
+	
 
 	// public double calculate(String keyWord, String category) {
 	// 	if (probCache.contains(keyWord, category)) {
