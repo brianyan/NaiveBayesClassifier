@@ -96,7 +96,8 @@ public class NaiveBayesTrainer{
         System.out.println(getposR());
         for(Iterator<Map.Entry<String, ArrayList<Double>>> it = map.entrySet().iterator(); it.hasNext(); ) {
 	      Map.Entry<String, ArrayList<Double>> entry = it.next();
-	      if(entry.getValue().get(0) <= 3 && entry.getValue().get(1) <=3) {
+	      if( (entry.getValue().get(0) <= 1 && entry.getValue().get(1) <=1) ||
+	      	 (Math.abs(entry.getValue().get(0) - entry.getValue().get(1)) <1) ) {
 	        it.remove();
 	      }
 	    }
@@ -207,7 +208,7 @@ public class NaiveBayesTrainer{
 	public String normalize(String s) {
 		String [] Stopwords = {"?", "." , ",", "/", "!" , "("  ,")"
 		, "'", "-", "\"", ">", "<", "the" , ":", ";" , "case", "ago", "he",
-		 "she", "all", "speak", "maybe"};
+		 "she", "all", "speak", "maybe",};
 		for(String c: Stopwords){
 			s = s.replace(c, " ");
 		}	

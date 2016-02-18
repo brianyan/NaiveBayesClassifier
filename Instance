@@ -1,4 +1,0 @@
-public class Instance {
-	public Label l;
-	public String [] words;
-}
