@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 
 public class NaiveBayesTrainer{
 	DecimalFormat df = new DecimalFormat("#.###");
+	//HashMap<String, Integer> hum = new HashMap<String,Integer>();
 	public double startTimeLabeling = 0.0;
 	public double endTimeLabeling = 0.0;
 	public double startTimeTraining = 0.0;
@@ -45,6 +46,15 @@ public class NaiveBayesTrainer{
 	        		if(s.substring(s.length()-3,s.length()).equals("ing")){
 	        			s = s.substring(0, s.length()-3);
 	        		} 
+	        		else if(s.substring(s.length()-2,s.length()).equals("ly")){
+	        			s = s.substring(0, s.length()-2);
+	        		}
+	        		else if(s.substring(s.length()-2,s.length()).equals("ed")){
+	        			s = s.substring(0, s.length()-2);
+	        		}
+	        		// else if(s.substring(s.length()-1,s.length()).equals("s")){
+	        		// 	s = s.substring(0,s.length()-1);
+	        		
         		}	
         		if(review.cat == Category.POS)
         			incrementWordsInCatPos();
@@ -83,17 +93,9 @@ public class NaiveBayesTrainer{
              }
         }
         	if(review.cat == Category.POS) incrementpos(); else incrementneg();
-        	// for(String s: map.keySet()){
-        	// 	// getting all words
-        	// 	ArrayList<Double> temp = map.get(s);
-        	// 	double prob = w_given_C( map.get(s) , review.cat);
-
-        	
-        	// System.out.println(review.cat);
-        	// System.out.println(line);
         }
         br.close();
-        System.out.println(getposR());
+
         for(Iterator<Map.Entry<String, ArrayList<Double>>> it = map.entrySet().iterator(); it.hasNext(); ) {
 	      Map.Entry<String, ArrayList<Double>> entry = it.next();
 	      if( (entry.getValue().get(0) <= 1 && entry.getValue().get(1) <=1) ||
@@ -101,6 +103,9 @@ public class NaiveBayesTrainer{
 	        it.remove();
 	      }
 	    }
+	    // for(String s: map.keySet){
+	    // 	hum.put(s,map.get(s).get(0) + map.get(s).get(1));
+	    // }
         for(String s: map.keySet()){
         	ArrayList<Double> temp = map.get(s);
         	temp.set(2,this.WordGivenCategory(s,Category.POS));
