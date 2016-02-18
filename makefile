@@ -5,7 +5,9 @@ JFLAGS = -g
 	$(JC) $(JFLAGS) $*.java
 CLASSES =\
 	NaiveBayesClassifier.java\
-	NaiveBayesTrainer.java
+	NaiveBayesTrainer.java\
+	Category.java\
+	Review.java
 default:classes
 classes: $(CLASSES:.java=.class)
 clean:

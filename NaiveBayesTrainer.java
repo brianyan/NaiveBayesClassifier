@@ -1,11 +1,23 @@
 import java.util.*;
 import java.io.*;
+import java.text.DecimalFormat;
 
 public class NaiveBayesTrainer{
+	DecimalFormat df = new DecimalFormat("#.###");
+	public double startTimeLabeling = 0.0;
+	public double endTimeLabeling = 0.0;
+	public double startTimeTraining = 0.0;
+	public double endTimeTraining = 0.0;
+	public double durationtesting = 0.0;
+	public double durationtraining = 0;
 	public static double posR = 0;
 	public static double negR = 0;
 	public static int TotalWordsInCatPos = 0;
 	public static int TotalWordsInCatNeg = 0;
+	public double MatchTotalLabeling = 0;
+	public double NonMatchTotalLabeling = 0;
+	public double MatchTotalTrainingLabeling = 0;
+	public double NonMatchTotalTrainingLabeling = 0;
 	public HashMap<String, ArrayList<Double> > map = new HashMap<String, ArrayList<Double> >();
 	// Array List is 0 index -> positive word count , 1 index -> negative word count
 	// 2 index -> 
@@ -13,6 +25,7 @@ public class NaiveBayesTrainer{
 
 	}
 	public void train(String filename) throws Exception{
+		this.startTimeTraining = System.currentTimeMillis();
 		String line = null;
 		BufferedReader br = new BufferedReader(new FileReader(filename));
         while((line = br.readLine()) != null){
@@ -23,18 +36,28 @@ public class NaiveBayesTrainer{
         	Review review = new Review(line.split("\\s"));
         	for(int i=1; i< review.words.length; i++){
         		// if word not in hashmap
+
+        		String s = review.words[i];
+        		if(s.matches("[0-9]+"))
+        			continue;
+			
+        		if(s.length() >= 4){
+	        		if(s.substring(s.length()-3,s.length()).equals("ing")){
+	        			s = s.substring(0, s.length()-3);
+	        		} 
+        		}	
         		if(review.cat == Category.POS)
         			incrementWordsInCatPos();
         		else
         			incrementWordsInCatNeg();
-        		if(!map.containsKey(review.words[i])){
+        		if(!map.containsKey(s)){
         			if(review.cat == Category.POS){
         				ArrayList<Double> temp = new ArrayList<Double>();
         				temp.add(1.0);
         				for(int n=1; n<4; n++){
         					temp.add(0.0);
         				}
-        				map.put(review.words[i], temp);
+        				map.put(s, temp);
                		}
                	else {
                		// neg category and not seen before
@@ -43,23 +66,21 @@ public class NaiveBayesTrainer{
         					temp.add(0.0);
         			}
         			temp.set(1, 1.0);
-        			map.put(review.words[i], temp);
+        			map.put(s, temp);
                	}
         	}
         	else { // we have seen the before
         		if(review.cat == Category.POS){
-        			ArrayList<Double> temp = map.get(review.words[i]);
+        			ArrayList<Double> temp = map.get(s);
         			temp.set(0, temp.get(0) + 1);
-        			map.put(review.words[i], temp);
+        			map.put(s, temp);
         		}
         		else {
-        			ArrayList<Double> temp = map.get(review.words[i]);
+        			ArrayList<Double> temp = map.get(s);
         			temp.set(1, temp.get(1) + 1);
-        			map.put(review.words[i], temp);
+        			map.put(s, temp);
         		}
-        		
-
-        	}
+             }
         }
         	if(review.cat == Category.POS) incrementpos(); else incrementneg();
         	// for(String s: map.keySet()){
@@ -72,39 +93,67 @@ public class NaiveBayesTrainer{
         	// System.out.println(line);
         }
         br.close();
-        //System.out.println(getposR());
-
+        System.out.println(getposR());
+        for(Iterator<Map.Entry<String, ArrayList<Double>>> it = map.entrySet().iterator(); it.hasNext(); ) {
+	      Map.Entry<String, ArrayList<Double>> entry = it.next();
+	      if(entry.getValue().get(0) <= 3 && entry.getValue().get(1) <=3) {
+	        it.remove();
+	      }
+	    }
         for(String s: map.keySet()){
         	ArrayList<Double> temp = map.get(s);
         	temp.set(2,this.WordGivenCategory(s,Category.POS));
         	temp.set(3,this.WordGivenCategory(s,Category.NEG));
-        	// //get probrability of word (word given cat neg)
-        	// // and word given cat pos
-        	// int positivewords = temp.get(0);
-        	// int negativewords = temp.get(1);
-        	// int vocab = getVocabulary();
-        	// int totalnumberwordsPos = this.getTotalWordsinCatPos();
-        	// int totalnumberwordsNeg = this.getTotalWordsinCatNeg();
-        	// double prob 
-        	// temp.set(2)
+        	// if(map.get(s).get(0) <= 1 && map.get(s).get(1) <=1){
+        	// 	map.remove(s);
+        	// }
         }
 
 
- //        for(String s: map.keySet()){
- //        		System.out.print(s + " count: ") ;
- //        		for(Double d: map.get(s))
- //        			System.out.print(d + " ");
- //        		System.out.println();
-	// }
-	System.out.println(getposR());
-	System.out.println(getnegR());
-	System.out.println(this.probability_CategoryPos());
-	System.out.println(this.TotalWordsInCatPos);
-	System.out.println(this.TotalWordsInCatNeg);
-	System.out.println(getVocabulary());
-
+        for(String s: map.keySet()){
+        		System.out.print(s + " count: ") ;
+        		for(Double d: map.get(s))
+        			System.out.print(d + " ");
+        		System.out.println();
+	}
+    endTimeTraining = System.currentTimeMillis();
+	durationtraining = (endTimeTraining - startTimeTraining) * .001;
 	}
 	public void classifyTesting(String filename) throws Exception{
+		// This should display the testing results in a nice format
+		String line = null;
+		this.startTimeLabeling = System.currentTimeMillis();
+		BufferedReader br = new BufferedReader(new FileReader(filename));
+        while((line = br.readLine()) != null){
+        	Review review = new Review(line.split("\\s"));
+        	Category outcome = this.classifyReview(review);
+        	if(outcome == Category.POS)
+        		System.out.println(1);
+        	else
+        		System.out.println(0);
+        	if(outcome == review.cat){
+        		MatchTotalLabeling++;//System.out.println("Match");
+        	}
+        	else 
+        		NonMatchTotalLabeling++; //System.out.println("No Match");
+
+        }
+        br.close();
+        endTimeLabeling = System.currentTimeMillis();
+        durationtesting = (endTimeLabeling - startTimeLabeling) * .001;
+        int durationtrainingint = (int) durationtraining;
+        int durationtestingint = (int) durationtesting;
+        System.out.println(durationtrainingint + " seconds" + " (training)");
+        System.out.println(durationtestingint + " seconds (labeling)");
+        // System.out.println(df.format( (MatchTotalTrainingLabeling) / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling) ) + " (training)");
+        System.out.println( df.format( (MatchTotalTrainingLabeling / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling)) ) + " (training)");
+        System.out.println(df.format( (MatchTotalLabeling) / (NonMatchTotalLabeling + MatchTotalLabeling) ) + " (testing)");
+        
+        //System.out.println(matchtotal);
+       // System.out.println(nonmatchtotal);
+	}
+
+	public void classifyTraining(String filename) throws Exception{
 		// This should display the testing results in a nice format
 		String line = null;
 		BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -112,12 +161,23 @@ public class NaiveBayesTrainer{
         	Review review = new Review(line.split("\\s"));
         	Category outcome = this.classifyReview(review);
         	if(outcome == review.cat){
-        		System.out.println("Match");
+        		MatchTotalTrainingLabeling++;//System.out.println("Match");
         	}
         	else 
-        		System.out.println("No Match");
+        		NonMatchTotalTrainingLabeling++; //System.out.println("No Match");
 
         }
+        br.close();
+        // endTimeLabeling = System.currentTimeMillis();
+        // durationtesting = (endTimeLabeling - startTimeLabeling) * .001;
+        // System.out.println(df.format(durationtraining) + " seconds" + " (training)");
+        // System.out.println(df.format(durationtesting) + " seconds (labeling)");
+        // // System.out.println(df.format( (MatchTotalTrainingLabeling) / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling) ) + " (training)");
+        // System.out.println(NonMatchTotalTrainingLabeling);
+        // System.out.println(df.format( (MatchTotalLabeling) / (NonMatchTotalLabeling + MatchTotalLabeling) ) + " (testing)");
+        
+        //System.out.println(matchtotal);
+       // System.out.println(nonmatchtotal);
 	}
 	/* method to clasify one review as POS or NEG */
 	public Category classifyReview(Review r) {
@@ -134,8 +194,9 @@ public class NaiveBayesTrainer{
 		}
 		double finalCatPosSum = CatPos + ProbWords_in_Pos;
 		double finalCatNegSum = CatNeg + ProbWords_in_Neg;
-		System.out.println("This is Pos :" + finalCatPosSum);
-		System.out.println("This is Neg:" + finalCatNegSum);
+
+		//System.out.println("This is Pos :" + finalCatPosSum);
+		//System.out.println("This is Neg:" + finalCatNegSum);
 		if(finalCatPosSum>finalCatNegSum)
 			return Category.POS;
 		return Category.NEG;
@@ -145,7 +206,8 @@ public class NaiveBayesTrainer{
 
 	public String normalize(String s) {
 		String [] Stopwords = {"?", "." , ",", "/", "!" , "("  ,")"
-		, "'", "-", "\"", ">", "<"};
+		, "'", "-", "\"", ">", "<", "the" , ":", ";" , "case", "ago", "he",
+		 "she", "all", "speak", "maybe"};
 		for(String c: Stopwords){
 			s = s.replace(c, " ");
 		}	
