@@ -103,25 +103,12 @@ public class NaiveBayesTrainer{
 	        it.remove();
 	      }
 	    }
-	    // for(String s: map.keySet){
-	    // 	hum.put(s,map.get(s).get(0) + map.get(s).get(1));
-	    // }
         for(String s: map.keySet()){
         	ArrayList<Double> temp = map.get(s);
         	temp.set(2,this.WordGivenCategory(s,Category.POS));
         	temp.set(3,this.WordGivenCategory(s,Category.NEG));
-        	// if(map.get(s).get(0) <= 1 && map.get(s).get(1) <=1){
-        	// 	map.remove(s);
-        	// }
+
         }
-
-
-        for(String s: map.keySet()){
-        		System.out.print(s + " count: ") ;
-        		for(Double d: map.get(s))
-        			System.out.print(d + " ");
-        		System.out.println();
-	}
     endTimeTraining = System.currentTimeMillis();
 	durationtraining = (endTimeTraining - startTimeTraining) * .001;
 	}
@@ -154,9 +141,6 @@ public class NaiveBayesTrainer{
         // System.out.println(df.format( (MatchTotalTrainingLabeling) / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling) ) + " (training)");
         System.out.println( df.format( (MatchTotalTrainingLabeling / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling)) ) + " (training)");
         System.out.println(df.format( (MatchTotalLabeling) / (NonMatchTotalLabeling + MatchTotalLabeling) ) + " (testing)");
-        
-        //System.out.println(matchtotal);
-       // System.out.println(nonmatchtotal);
 	}
 
 	public void classifyTraining(String filename) throws Exception{
@@ -174,16 +158,6 @@ public class NaiveBayesTrainer{
 
         }
         br.close();
-        // endTimeLabeling = System.currentTimeMillis();
-        // durationtesting = (endTimeLabeling - startTimeLabeling) * .001;
-        // System.out.println(df.format(durationtraining) + " seconds" + " (training)");
-        // System.out.println(df.format(durationtesting) + " seconds (labeling)");
-        // // System.out.println(df.format( (MatchTotalTrainingLabeling) / (NonMatchTotalTrainingLabeling + MatchTotalTrainingLabeling) ) + " (training)");
-        // System.out.println(NonMatchTotalTrainingLabeling);
-        // System.out.println(df.format( (MatchTotalLabeling) / (NonMatchTotalLabeling + MatchTotalLabeling) ) + " (testing)");
-        
-        //System.out.println(matchtotal);
-       // System.out.println(nonmatchtotal);
 	}
 	/* method to clasify one review as POS or NEG */
 	public Category classifyReview(Review r) {
@@ -246,22 +220,6 @@ public class NaiveBayesTrainer{
 	public int getVocabulary(){
 		return this.map.size();
 	}
-
-	
-
-	// public double calculate(String keyWord, String category) {
-	// 	if (probCache.contains(keyWord, category)) {
-	// 		return probCache.get(keyWord, category);
-	// 	}
-	// 	Integer Nxc = tdm.numberOfWord(keyWord, category);
-	// 	Integer Nc = tdm.totalNumberOfWords(category);
-	// 	Integer V = tdm.getVocabulary();
-
-	// 	Double prob = (Nxc + 1) / (Nc + M + V);
-	// 	probCache.add(keyWord, category, prob);
-
-	// 	return prob;
-	// }
 	public double probability_CategoryPos() {
 		//prob is just #occurances/#total
 			return (getposR() / totalR());
